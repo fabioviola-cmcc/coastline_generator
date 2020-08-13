@@ -27,10 +27,12 @@ if __name__ == "__main__":
     polyFilename = None
     outFilename = None
     pngFilename = None
+    lonAdded = None
+    latAdded = None
     
     # read params
     try:
-        options, rem = getopt.getopt(sys.argv[1:], 'hl:p:o:', ['linesFile=', 'help', 'polyFile=', 'outFile=', 'pngFile='])
+        options, rem = getopt.getopt(sys.argv[1:], 'hl:p:o:', ['linesFile=', 'help', 'polyFile=', 'outFile=', 'pngFile=', 'latInterval=', 'lonInterval='])
     
         for opt, arg in options:
             if opt in ('-l', '--linesFile'):
@@ -41,6 +43,14 @@ if __name__ == "__main__":
                 outFilename = arg
             elif opt in ('--pngFile'):
                 pngFilename = arg
+            elif opt in ('--latInterval'):
+                latMin,latMax = map(float, arg.split(","))
+            elif opt in ('--lonInterval'):
+                lonMin,lonMax = map(float, arg.split(","))
+            elif opt in ('--addPoint'):
+                lonAdded,latAdded = map(float, arg.split(","))                
+            elif opt in ('--pngFile'):
+                pngFilename = arg                
             elif opt in ('-h', '--help'):
                 showHelp(logger)
                 sys.exit(0)
@@ -69,12 +79,21 @@ if __name__ == "__main__":
 
     # initialise a map
     if pngFilename:
-        m = Basemap(llcrnrlon=57, llcrnrlat=-21,
-                    urcrnrlon=58,urcrnrlat=-19.5,
+
+        print(latMin)
+        print(latMax)
+        print(lonMin)
+        print(lonMax)
+        print((latMax-latMin)/2)
+        print((lonMax-lonMin)/2)
+        
+        m = Basemap(llcrnrlon=lonMin, llcrnrlat=latMin,
+                    urcrnrlon=lonMax,urcrnrlat=latMax,
                     rsphere=(6378137.00,6356752.3142),        
                     resolution='f',projection='merc',                
-                    lat_0=-20.25, lon_0=57.5, epsg=4326)
-        plt.figure(figsize=(7, 7))
+                    lat_0=(latMax-latMin)/2,
+                    lon_0=(lonMax-lonMin)/2)
+        plt.figure(figsize=(20, 20))
         
     # write the total number of polygons
     sumpoly = 0
@@ -100,7 +119,7 @@ if __name__ == "__main__":
         print("[%s] -- Reading records" % APPNAME)
         records = f.records()
 
-        # iterate over records and shapes -- TODO: optimize this code!
+        # iterate over records and shapes
         print("[%s] -- Iterating over records and shapes" % APPNAME)
         for record, shape in zip(records,shapes):
 
@@ -116,18 +135,22 @@ if __name__ == "__main__":
                     # plot on map
                     if pngFilename:
                         ppx, ppy = m(p[0],p[1])
-                        m.plot(ppx, ppy, 'k+', markersize=1)
+                        m.plot(ppx, ppy, 'k+', markersize=0.1, marker=".")
 
 # plot
 if pngFilename:
     
     # draw coastline
-    m.arcgisimage(server='http://server.arcgisonline.com/ArcGIS', service='ESRI_Imagery_World_2D', xpixels=1200)
     m.drawcoastlines(color='r', linewidth=0.2)
+
+    # added point
+    if lonAdded and latAdded:
+        ppx, ppy = m(lonAdded, latAdded)
+        m.plot(ppx, ppy, 'k+', markersize=5, color='g')
     
     # save png
     plt.savefig(pngFilename)
-                
+    
 # close file
 print("[%s] -- Closing output file" % APPNAME)
 outFile.close()
