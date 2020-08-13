@@ -32,7 +32,7 @@ if __name__ == "__main__":
     
     # read params
     try:
-        options, rem = getopt.getopt(sys.argv[1:], 'hl:p:o:', ['linesFile=', 'help', 'polyFile=', 'outFile=', 'pngFile=', 'latInterval=', 'lonInterval='])
+        options, rem = getopt.getopt(sys.argv[1:], 'hl:p:o:', ['linesFile=', 'help', 'polyFile=', 'outFile=', 'pngFile=', 'latInterval=', 'lonInterval=', 'addPoint='])
     
         for opt, arg in options:
             if opt in ('-l', '--linesFile'):
